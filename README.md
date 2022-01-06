@@ -10,7 +10,7 @@
 - 기본 키 매핑 : @Id
 - 연관관계 매핑 @ManyToOne,@JoinColumn....
 
-#### 객체와 테이블  
+#### 1. 객체와 테이블  
 #### @Entity
 - 엔티티는 JPA가 관리, JPA 사용하여 테이블 매핑 시 @Entity는 필수
 - 기본 생성자 필수(public, protected 생성자)
@@ -42,7 +42,7 @@ update | 변경분만 만영(운영DB 사용X)
 validate | 엔티티와 테이블이 정상 매핑 되었는지만 확인
 none | 사용X
 
-#### 필드와 컬럼 
+#### 2. 필드와 컬럼  
 #### 매핑 어노테이션 정리
 어노테이션 | 설명
 ----| ----
@@ -61,7 +61,7 @@ none | 사용X
 - TemporalType.TIME(시간, 데이터베이스 tiem 타입과 매핑)
 - TemporalType.TIMESTAMP(날짜, 시간, 데이터베이스 tiemstamp 타입과 매핑)
 
-#### 기본 키 매핑
+#### 3. 기본 키 매핑
 #### @Id
 - 직접 할당
 #### @GeneratedValue
