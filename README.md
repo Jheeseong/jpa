@@ -1,5 +1,99 @@
 # JPA
 
+# v1.02 1/6
+
+### 엔티티 매핑
+
+#### 엔티티 매핑 종류
+- 객체와 테이블 매핑 : @Entity, @Table
+- 필드와 컬럼 매핑 : @Column
+- 기본 키 매핑 : @Id
+- 연관관계 매핑 @ManyToOne,@JoinColumn....
+
+#### 객체와 테이블  
+#### @Entity
+- 엔티티는 JPA가 관리, JPA 사용하여 테이블 매핑 시 @Entity는 필수
+- 기본 생성자 필수(public, protected 생성자)
+- final 클래스, enum, interface, inner 클래스 사용X
+- 저장할 필드에 final 사용 X
+- 기본 값은 클래스 이름 사용, 가급적 기본값을 사용
+
+#### @Table
+속성 | 기능 | 기본값
+---- |---- | ----
+name |매핑할 테이블 이름| 엔티티 이름 사용
+catalog | 데이터베이스 catalog 매핑 |
+schema | 데이터 베이스 schema 매핑 |
+uniqueConstraints(DDL) | DDL 생성 시 유니크 제약 조건 생성 |
+
+#### DB 스키마 자동 생성
+- DDL을 애플리케이션 실행 시점에 자동 생성
+- 테이블 중심 -> 객체 중심
+- DDL은 개발 장비에서만 사용  
+- resources/META-INF/persistence.xml hibernate.hbm2ddl.auto 추가
+- resources/application.yml ddl-auto 추가
+- DDL 생성 기능은 자동 생성 때만 사용되고 JPA 실행 로직에는 영향 X
+
+옵션 | 설명
+---- | ----
+create | 기존테이블 삭제 후 다시 생성(DROP + CREATE)
+create-drop | create와 같으나 종료시점에 테이블 drop
+update | 변경분만 만영(운영DB 사용X)
+validate | 엔티티와 테이블이 정상 매핑 되었는지만 확인
+none | 사용X
+
+#### 필드와 컬럼 
+#### 매핑 어노테이션 정리
+어노테이션 | 설명
+----| ----
+@Column | 컬럼 매핑
+@Temporal | 날짜 타입 매핑
+@Enumerated | enum 타입 매핑(사용 시 EnumType.STRING을 사용_ ORDINAL 사용 시 원치않은 값이 나올 가능성 존재)
+@Lob | BLOB,CLOB 매핑
+@Transient | 매핑 무시
+
+#### @Column
+![image](https://user-images.githubusercontent.com/96407257/148343036-294420a0-027c-435f-8197-fd57b2c5bf7e.png)
+
+#### @Temporal
+- value 종류
+- TemporalType.DATE(날짜, 데이터베이스 date 타입과 매핑)
+- TemporalType.TIME(시간, 데이터베이스 tiem 타입과 매핑)
+- TemporalType.TIMESTAMP(날짜, 시간, 데이터베이스 tiemstamp 타입과 매핑)
+
+#### 기본 키 매핑
+#### @Id
+- 직접 할당
+#### @GeneratedValue
+- 자동 생성
+- IDENTITY : 기본 키 생성을 데이터베이스에 위임, em.persist() 시점에 즉시 INSERT SQL 실행하고 DB에서 식별자 조회
+
+      @Entity
+      public class Member {
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      private Long id;
+      
+- SEQUENCE : 데이터베이스 시퀸스는 유일한 값을 순서대로 생성하는 특별한 오브젝트 (ORACLE, PostgreSQL, H2데이터베이스), @SequenceGenerator 필요, allocationSize를 통해 설정 값만큼 DB에서 가져오면서 성능을 최적화(기본값 50)
+
+      @Entity 
+      @SequenceGenerator( 
+              name = “MEMBER_SEQ_GENERATOR", 
+              sequenceName = “MEMBER_SEQ", //매핑할 데이터베이스 시퀀스 이름
+              initialValue = 1, allocationSize = 1) 
+      public class Member { 
+      @Id 
+      @GeneratedValue(strategy = GenerationType.SEQUENCE, 
+            generator = "MEMBER_SEQ_GENERATOR") 
+      private Long id; 
+      
+![image](https://user-images.githubusercontent.com/96407257/148350045-584340bf-bbd7-422f-a6ab-50c4acc06734.png)
+
+
+- TABLE : 키 생성용 테이블 사용, 모든 DB에서 사용(@TableGenerator 필요)
+- AUTO : SQL 종류에 따라 자동 지정
+
+
 # v1.01 1/5
 
 ### JPA가 유용한 2가지
