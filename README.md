@@ -1,5 +1,128 @@
 # JPA
 
+# v1.03 1/7
+
+### 연관관계 매핑
+
+#### 연관관계가 없는 객체
+![image](https://user-images.githubusercontent.com/96407257/148393262-dad0f8b3-db10-4d5d-b09f-3e6a851e47b8.png)
+
+- 엔티티 클래스 생성(외래 키를 잠조 없이 그대로 사용)
+    
+      @Entity
+      public class MappingMember {
+        @Id @GeneratedValue
+        @Column(name = "MAP_MEMBER_ID")
+        private Long id;
+
+        private String name;
+
+        //참조대신 외래 키 그대로 사용
+        @Column(name = "TEAM_ID")
+        private Long teamId;
+        ....
+     
+      @Entity
+      public class Team {
+        @Id @GeneratedValue
+        private Long id;
+        private String name; 
+         … 
+        }
+ 
+ 
+- 데이터 값 주입
+
+      MappingTeam mappingTeam = new MappingTeam();
+            mappingTeam.setName("teamA");
+
+            em.persist(mappingTeam);
+
+            MappingMember mappingmember = new MappingMember();
+            mappingMember.setName("memberA");
+            member.setTeamId(team.getId());
+            
+            em. persist(mappingmember)
+            
+           ...
+           MappingMember findMember = em.find(MappingMember.class, mappingmember.getId());
+            //식별자로 다시 조회.. 객체지향적이지 않음
+            Long findTeamId = findMember.getTeamId();
+            MappingTeam findTeam = em.find(MappingTeam.class, findTeamId);
+            
+- 객체를 테이블에 맞춰 데이터 중심 모델링을 하면 협력 관계(객체지향)적이지 않음
+
+#### 단방향 연관관계
+![image](https://user-images.githubusercontent.com/96407257/148395317-a7df9903-a789-4dcb-be86-6147ce918f72.png)
+
+
+- 엔티티 클래스 생성(객체 참조와 테이블 외래 키 매핑)
+      
+       @Entity
+       public class MappingMember {
+          @Id @GeneratedValue
+          @Column(name = "MAP_MEMBER_ID")
+          private Long id;
+
+          private String name;
+
+          //객체의 참조와 테이블의 외래 키 참조
+          @ManyToOne(fetch = FetchType.LAZY)
+          @JoinColumn(name = "TEAM_ID")
+          private MappingTeam team;
+          
+- 데이터 값 주입
+
+
+           MappingTeam mappingTeam = new MappingTeam();
+            mappingTeam.setName("teamA");
+
+            em.persist(mappingTeam);
+
+            MappingMember mappingmember = new MappingMember();
+            mappingmember.setName("memberA");
+            //단방향 연관관계 설정
+            mappingmember.setTeam(mappingTeam);
+            em.persist(mappingmember);
+            
+            ...
+            
+          // 단방향 매핑을 통한 member -> team 조회
+            MappingTeam findTeam = findMember.getTeam();
+            System.out.println("findTeam = " + findTeam.getName());
+            
+#### 양방향 연관관계, 연관관계 주인
+![image](https://user-images.githubusercontent.com/96407257/148396187-582717ce-d0c6-497f-99fe-95a7b2f46027.png)
+
+- 객체들은 양방향 연관관계가 존재하지만 테이블은 외래 키 하나를 통해 서로 연관관계를 가진다(방향 X, 양쪽으로 조인 가능)  
+- 사실 객체의 양방향 관계 보다 서로 다른 방향 관계가 2개인 것이다.  
+- 양방향 매핑 시 객테의 두 관계 중 하나를 연관관계의 주인으로 지정해야한다.  
+- 연관관계의 주인만 외래 키를 관리(등록, 수정)
+- 주인이 아닌 쪽은 읽기만 가능
+- 주인이 아닌 쪽에 mappedBy 속성을 통해 주인을 지정
+- 외래 키가 있는 곳을 주인으로 지정(ManyToOne일 때 Many부분을 주인으로 지정)
+- 단방향 매핑을 하며 필요 시 양방향 매핑을 추가하는 방향으로 설계
+
+      @Entity
+      public class MappingTeam {
+          @Id @GeneratedValue
+          private Long id;
+          private String name;
+
+          //mappedBy를 통해 member를 주인지정, 저 team은 member.team을 의미
+          @OneToMany(mappedBy = "team") 
+          List<MappingMember> members = new ArrayList<>();
+
+          
+- 데이터 값 주입
+      
+       // 양방향 매핑을 통한 team -> member 조회
+            List<MappingMember> members = findMember.getTeam().getMembers();
+
+            for (MappingMember member : members) {
+                System.out.println("member.getName() = " + member.getName());
+            }
+            
 # v1.02 1/6
 
 ### 엔티티 매핑
