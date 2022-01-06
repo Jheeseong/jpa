@@ -28,17 +28,19 @@ public class JpaMain {
 //            System.out.println("findMember.getName() = " + findMember.getName());
 
 
-            List<Member> result = em.createQuery("select m from Member m", Member.class)
-                    .setFirstResult(0)
-                    .setMaxResults(8)
-                    .getResultList();
-
-            for (Member member1 : result) {
-                System.out.println("member1.getName() = " + member1.getName());
-            }
+//            List<Member> result = em.createQuery("select m from Member m", Member.class)
+//                    .setFirstResult(0)
+//                    .setMaxResults(8)
+//                    .getResultList();
+//
+//            for (Member member1 : result) {
+//                System.out.println("member1.getName() = " + member1.getName());
+//            }
 
             entityTransaction.commit();
         }catch (Exception e) {
+            entityTransaction.rollback();
+        } finally {
             em.close();
         }
         emf.close();
