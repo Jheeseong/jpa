@@ -12,13 +12,13 @@ public class JpaMain {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
 
         EntityManager em = emf.createEntityManager();
-        EntityTransaction entityTransaction = em.getTransaction();
-        entityTransaction.begin();
+
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
 
         try {
 //            Member member = new Member();
-//            member.setId(1L);
-//            member.setName("JPA");
+//            member.setUsername("JPA");
 //
 //            em.persist(member);
 
@@ -37,9 +37,10 @@ public class JpaMain {
 //                System.out.println("member1.getName() = " + member1.getName());
 //            }
 
-            entityTransaction.commit();
+            tx.commit();
         }catch (Exception e) {
-            entityTransaction.rollback();
+            e.printStackTrace();
+            tx.rollback();
         } finally {
             em.close();
         }
