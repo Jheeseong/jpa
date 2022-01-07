@@ -1,5 +1,32 @@
 # JPA
 
+# 1.04 1/7
+
+#### 연관관계 매핑 주의점
+- 연관관계의 주인에 값을 입력(역방향만 연관관계를 설정하면 안됨)  
+- 양방향으로 둘 다 값을 입력(한방향이 아닌 양방향 모두 값을 설정)  
+- 실수를 줄이기위해 엔티티에 값을 설정하는 것이 좋음  
+- 양방향 매핑 시 무한 루프에 조심(ex toString(), lombok, JSON 생성 라이브러리)  
+
+      @Entity
+      public class MappingMember {
+          ....
+       /연관관계 편의 메소드
+       public void changeTeam(MappingTeam team) {
+        this.team = team;
+        team.getMembers().add(this);
+        }
+
+혹은  
+
+      @Entity
+      public class MappingTeam {
+       ....
+      / 연관관계 편의 메소드
+       public void addMember(MappingMember mappingMember) {
+         mappingMember.setTeam(this);
+         members.add(mappingMember);
+       }
 # v1.03 1/7
 
 ### 연관관계 매핑
@@ -316,6 +343,7 @@ none | 사용X
 - 플러시는 영속성 컨텍스트를 비우지 않음
 - 영속성 컨텍스트의 변경 내용을 DB에 동기화
 - 트랙잭션 작업 단위가 중요 -> 커밋 직전에만 동기화(insert,update 등등)하면 됨
+
 # v1.00 1/5
 
 ### JPA를 통한 DB 접근
