@@ -12,6 +12,7 @@ public class MappingTeam {
     private String name;
 
     @OneToMany(mappedBy = "team")
+//    @JoinColumn(name = "TEAM_ID") // 연관관계 주인 설정
     List<MappingMember> members = new ArrayList<>();
 
     // 연관관계 편의 메소드
