@@ -1,32 +1,148 @@
 # JPA
 
-# 1.04 1/7
+# v1.04 1/7
 
-#### 연관관계 매핑 주의점
-- 연관관계의 주인에 값을 입력(역방향만 연관관계를 설정하면 안됨)  
-- 양방향으로 둘 다 값을 입력(한방향이 아닌 양방향 모두 값을 설정)  
-- 실수를 줄이기위해 엔티티에 값을 설정하는 것이 좋음  
-- 양방향 매핑 시 무한 루프에 조심(ex toString(), lombok, JSON 생성 라이브러리)  
+## 연관 관계 매핑 종류
+- ManyToOne(N:1)  
+- OneToMany(1:N)
+- OneToOne(1:1)
+- ManyToMany(N:N)
 
-      @Entity
-      public class MappingMember {
-          ....
-       /연관관계 편의 메소드
-       public void changeTeam(MappingTeam team) {
-        this.team = team;
-        team.getMembers().add(this);
-        }
+### 1. ManyToOne(N:1)
+![image](https://user-images.githubusercontent.com/96407257/148533978-ddae1bfd-e264-4882-8119-1951135a5cdc.png)
+- 가장 많이 사용하는 연관관계
+- 외래 키가 있는 쪽이 연관관계의 주인
+- 양쪾을 서로 참조하여 개발
 
-혹은  
+### 2. OneToMany(1:N)
+![image](https://user-images.githubusercontent.com/96407257/148534183-362cb351-b9eb-46ab-a028-2627d1d4c9b5.png)
+#### OneToMany 단방향
+- OneToMany 단방향의 경우 1이 연관관계의 주인이지만 테이블에서는 다(N)쪽에 외래 키가 존재
+- 객체와 테이블 차이로 반대편 테이블의 외래키를 관리하는 특이 구조
+- @JoinColumn 사용은 필수 사용하지 않을 시 Jointable 구조 방식을 사용(중간에 테이블 하나 추가하는 방식)
+- 연관관계 관리를 위해 추가 UPDATE 쿼리가 실행
 
       @Entity
       public class MappingTeam {
-       ....
-      / 연관관계 편의 메소드
-       public void addMember(MappingMember mappingMember) {
-         mappingMember.setTeam(this);
-         members.add(mappingMember);
-       }
+      ....
+      @OneToMany
+      @JoinColumn(name = "TEAM_ID") // 연관관계 주인 설정
+      List<MappingMember> members = new ArrayList<>();
+      ....
+      }
+      
+#### OneToMany 양방향
+![image](https://user-images.githubusercontent.com/96407257/148534682-b089b115-00f4-4422-b41e-360607c389c1.png)
+- 이런 매핑은 공식적으로 존재 X
+- @JoinColumn(insertable=false, updatable=false)를 사용
+- 읽기 전용 필드를 사용하여 양방향처럼 사용하는 방법
+- 다대일 양방향 사용을 권장!!
+
+      @Entity
+      public class MappingMember {
+      ....
+      // OneToMany 양방향 읽기 전용 필드
+      @JoinColumn(insertable = false, updatable = false)
+      private MappingTeam team;
+      ....
+      }
+
+### 3. OneToOne(1:1)
+![image](https://user-images.githubusercontent.com/96407257/148535028-30bd993a-4022-48ec-9b8f-675d035d6368.png)
+- 주 테이블이나 대상 테이블 중에 외래 키 선택 가능
+- 외래 키에 데이터베이스 유니크(UNI) 제약조건 추가
+- 양방향 시 ManyToOne처럼 외래키가 있는 곳이 연관관계의 주인(반대편은 mappedBy 적용)
+- 주 테이블에 외래 키 적용이 유용
+- 대상 테이블에 외래 키 적용 시 프록시 기능의 한계로 지연 로딩을 설정해도 즉시 로딩이 됨
+
+       @Entity
+      public class MappingMember {
+        ....
+        @OneToOne
+        @JoinColumn(name = "ONE_ID") //연관관계 주인 설정
+        private MappingOneObject oneObject;
+        ....
+      }
+      
+      @Entity
+      public class MappingOneObject {
+
+        @Id @GeneratedValue
+        private Long id;
+        private String name;
+
+        @OneToOne(mappedBy = "oneObject")
+        private MappingMember mappingMember;
+      }
+       
+### 4. ManyToMany(N:M)
+![image](https://user-images.githubusercontent.com/96407257/148549745-1477d048-a1c1-4c77-947a-0f1b7b1abd74.png)
+
+- 관계형 DB는 정규화된 테이블 2개로 다대다 관계 표현이 불가능
+- 연결 테이블을 추가해서 일대다, 다대일 관계를 풀어내야함
+- 객체는 컬렉션을 사용하여 다대다 관계 가능
+
+#### 다대다 매핑의 한계
+- 편리해 보이지만 실무에서 사용X
+- 연결 테이블이 단순히 연결만 하는 것이 아닌 다른 데이터들이 들어올 가능성이 있음
+
+      @Entity
+      public class MappingMember {
+        ....
+        ManyToMany 한계
+        @ManyToMany
+        @JoinColumn(name = "MEMBER_OBJECTS")
+        private List<MappingManyObject> manyObjects = new ArrayList<>();
+        ....
+      }
+      
+      @Entity
+      public class MappingManyObject {
+        ....
+        // ManyToMany 한계
+       @ManyToMany(mappedBy = "manyObjects")
+       private List<MappingMember> members = new ArrayList<>();
+        ....
+      }
+
+#### 다대다 한계 극복
+![image](https://user-images.githubusercontent.com/96407257/148550637-ed2c3cec-fc17-4534-aa45-0d6512c1eab5.png)
+- 연결 테이블용 엔티티 추가(연결 테이블을 엔티티로 승격)
+- @ManyToMany -> @OneToMany, @ManyToOne
+
+      @Entity
+      public class MappingMember {
+        ....
+        //ManyToMany 한계 극복
+      @OneToMany(mappedBy = "member")
+      private List<MemberObjects> memberObjects = new ArrayList<>();
+        ....
+      }
+      
+      @Entity
+      public class MappingManyObject {
+        ....
+        // ManyToMany 한계 극복
+        @OneToMany(mappedBy = "manyObject")
+        private List<MemberObjects> memberObjects = new ArrayList<>();
+        ....
+      }
+      
+      public class MemberObjects {
+
+        @Id @GeneratedValue
+        private Long id;
+
+        @ManyToOne
+        @JoinColumn(name = "MEMBER_ID")
+        private MappingMember member;
+
+        @ManyToOne
+        @JoinColumn(name = "OBJECT_ID")
+        private MappingManyObject manyObject;
+      }
+
+
 # v1.03 1/7
 
 ### 연관관계 매핑
@@ -149,6 +265,32 @@
             for (MappingMember member : members) {
                 System.out.println("member.getName() = " + member.getName());
             }
+            
+### 연관관계 매핑 주의점
+- 연관관계의 주인에 값을 입력(역방향만 연관관계를 설정하면 안됨)  
+- 양방향으로 둘 다 값을 입력(한방향이 아닌 양방향 모두 값을 설정)  
+- 실수를 줄이기위해 엔티티에 값을 설정하는 것이 좋음  
+- 양방향 매핑 시 무한 루프에 조심(ex toString(), lombok, JSON 생성 라이브러리)  
+
+      @Entity
+      public class MappingMember {
+          ....
+       /연관관계 편의 메소드
+       public void changeTeam(MappingTeam team) {
+        this.team = team;
+        team.getMembers().add(this);
+        }
+
+혹은  
+
+        @Entity
+        public class MappingTeam {
+         ....
+        / 연관관계 편의 메소드
+         public void addMember(MappingMember mappingMember) {
+           mappingMember.setTeam(this);
+           members.add(mappingMember);
+         }
             
 # v1.02 1/6
 
