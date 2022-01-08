@@ -1,5 +1,81 @@
 # JPA
 
+# v1.05 1/8
+
+## 상속관게 매핑
+- 관계형 데이터베이스는 상속 관계가 아님
+- 슈퍼타입 서브타입 관계라는 모델링 기법이 객체 상속과 유사
+- 객체의 상속 구조와 DB의 슈퍼타입 서브타입 관계를 매핑
+![image](https://user-images.githubusercontent.com/96407257/148634257-5b108549-6d11-4161-9e0a-5e8f03881e44.png)
+
+### 상속관계 매핑 방법 종류
+- 조인 전략 : 각각의 테이블로 변환
+- 단일 테이블 전략 : 통합 테이블로 변환
+- 구현 클래스마다 테이블 전략 : 서브타입 테이블로 전환
+
+### 조인 전략
+![image](https://user-images.githubusercontent.com/96407257/148634301-2cf60eb0-7bdd-45ba-a428-8af560fe2209.png)
+- 장점 : 테이블 정규화, 외래키 참조 무결성 제약조건 활용가능, 저장공간 효율화
+- 단점 : 조회 시 조인 많이 사용(성능저하), 조회 쿼리 복잡, 데이터 저장 시 쿼리 2번 호출
+
+      @Entity
+      @Inheritance(strategy = InheritanceType.JOINED)
+      @DiscriminatorColumn(name = "TYPE")
+      public class InheritanceMain {
+          @Id @GeneratedValue
+          private Long id;
+          ....
+      }
+      
+      @Entity
+      @DiscriminatorValue("One")
+      public class InheritanceTableOne extends InheritanceMain {
+
+          private String oneName;
+          private String oneOther;
+          ....
+      }
+      
+      @Entity
+      @DiscriminatorValue("Two")
+      public class InheritanceTableTwo {
+
+          private String twoName;
+          private String twoOther;
+          ....
+      }
+      
+      @Entity
+      @DiscriminatorValue("Three")
+      public class InheritanceTableThree extends InheritanceMain {
+
+          private String threeName;
+          private String threeOther;
+          ....
+      }
+
+### 단일 테이블 전략
+![image](https://user-images.githubusercontent.com/96407257/148634489-553e2c80-6bac-4628-a926-a7e33c188d83.png)
+- 장점 : 조인이 필요없어 성능이 높음, 조회 쿼리 단순
+- 단점 : 자식 엔티티가 매핑한 컬럼은 모두 null, 단일 테이블에 모든 것을 저장해 테이블이 커질 수 있음
+
+      @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+      @DiscriminatorColumn(name = "TYPE")
+      public class InheritanceMain {
+      ....
+      }
+      
+### 구현 클래스마다 테이블 전략
+![image](https://user-images.githubusercontent.com/96407257/148634550-1b2d58e2-4f4d-4ed9-b153-be80ccb51d58.png)
+- 장점 : 서브 타입 명확하게 구분할 때 효과적, not null 제약조건 사용 가능
+- 단점 : 여러 자식 테이블을 함께 조회할 때 성능 저하, 자식 테이블을 통합해서 쿼리 어려움
+- 이 전략은 비추천
+
+      @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+      @DiscriminatorColumn(name = "TYPE")
+      public class InheritanceMain {
+          ....
+          }
 # v1.04 1/7
 
 ## 연관 관계 매핑 종류
