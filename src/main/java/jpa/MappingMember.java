@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class MappingMember {
+public class MappingMember extends BaseEntity {
     @Id
     @GeneratedValue
     @Column(name = "MAP_MEMBER_ID")

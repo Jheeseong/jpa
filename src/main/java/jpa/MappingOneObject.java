@@ -6,7 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 @Entity
-public class MappingOneObject {
+public class MappingOneObject extends BaseEntity {
 
     @Id @GeneratedValue
     private Long id;

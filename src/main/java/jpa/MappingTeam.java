@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class MappingTeam {
+public class MappingTeam extends BaseEntity {
     @Id
     @GeneratedValue
     private Long id;

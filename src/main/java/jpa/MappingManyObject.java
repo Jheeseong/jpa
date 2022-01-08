@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class MappingManyObject {
+public class MappingManyObject extends BaseEntity{
 
     @Id @GeneratedValue
     private Long id;
