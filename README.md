@@ -76,6 +76,24 @@
       public class InheritanceMain {
           ....
           }
+          
+### MappedSuperclass
+- 공통 매핑 정보가 필요할 때 사용
+- 상속관계 매핑X, 엔티티X, 테이블과 매핑X
+- 부모 클래스를 상속 받는 자식 클래스에 매핑 정보만 제공
+- 조회, 검색 불가
+- 추상 클래스 권장
+![image](https://user-images.githubusercontent.com/96407257/148634964-b256a20d-501e-4b99-87ff-5abac2ec1c39.png)
+
+       @MappedSuperclass
+       public class BaseEntity {
+
+          private String createBy;
+          private LocalDateTime createDate;
+          private String ModifiedBy;
+          private LocalDateTime ModifiedDate;
+          ....
+          }
 # v1.04 1/7
 
 ## 연관 관계 매핑 종류
