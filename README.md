@@ -1,5 +1,33 @@
 # JPA
 
+# v1.06 1/9
+
+## 프록시
+### 프록시 기초
+- em.find : 데이터베이스를 통해서 실제 엔티티 객체 조회
+- em.getReference : 데이터베이스 조회를 미루는 가짜(프록시) 엔티티 객체 조회
+
+### 프톡시 특징
+- 실제 클래스를 상속 받아서 만들어짐
+- 실제 클래스와 겉 모양이 같음
+- 사용하는 입장에서 실제 객체 프록시 객체 구분하지 않고 사용하면 됨(이론상)
+- 프록시 객체는 실제 객체의 참조(target)를 보관
+- 프록시 객체를 호출하면 프록시 객체는 실제 객체 메소드 호출
+![image](https://user-images.githubusercontent.com/96407257/148669200-aaa9f3af-908c-4c56-b452-a82effce3292.png)
+
+### 프록시 객체 초기화
+    Member member = em.getReference(Member.class, "id1");
+    member.getName();
+    
+![image](https://user-images.githubusercontent.com/96407257/148669216-86fdbde0-aa40-4cc3-a0a1-dd55662b109c.png)
+
+### 프록시 특징
+- 프록시 객체는 처음 사용 시 한 번만 초기화
+- 프록시 객체 초기화 할 때 프록시 객체가 실제 엔티티로 바뀌지 않음. 초기화 되면 프록시를 통해 실제 엔티티에 접근 가능
+- 프록시 객체는 원본 엔티티 상속 받음(타입은 다름, 따라서 ==비교 실패, 대신 instance of 사용)
+- 영속성 컨텍스트에 찾는 엔티티가 있다면 Reference를 호출하여도 실제 엔티티 반환
+- 준영속 상태 일 떄 프록시 초기화 시 문제 발생(org.hibernate.LazyInitializationException 예외)
+
 # v1.05 1/8
 
 ## 상속관게 매핑
