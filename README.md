@@ -7,6 +7,21 @@
 - em.find : 데이터베이스를 통해서 실제 엔티티 객체 조회
 - em.getReference : 데이터베이스 조회를 미루는 가짜(프록시) 엔티티 객체 조회
 
+      //프록시 - find,Reference 비교
+      Member member1 = new Member();
+      member1.setUsername("member1");
+      em.persist(member1);
+
+      em.flush()
+      em.clear();
+
+      Member reference = em.getReference(Member.class, member1.getId())
+      Member findMember = em.find(Member.class, member1.getId());
+
+      System.out.println("reference = " + reference.getClass());            
+      System.out.println("findMember = " + findMember.getClass());
+
+
 ### 프톡시 특징
 - 실제 클래스를 상속 받아서 만들어짐
 - 실제 클래스와 겉 모양이 같음
@@ -66,7 +81,7 @@
       
       @Entity
       @DiscriminatorValue("Two")
-      public class InheritanceTableTwo {
+      public class InheritanceTableTwo extends InheritanceMain {
 
           private String twoName;
           private String twoOther;
@@ -250,17 +265,18 @@
         ....
       }
       
+      @Entity
       public class MemberObjects {
 
         @Id @GeneratedValue
         private Long id;
 
         @ManyToOne
-        @JoinColumn(name = "MEMBER_ID")
+        @JoinColumn(name = "MAP_MEMBER_ID")
         private MappingMember member;
 
         @ManyToOne
-        @JoinColumn(name = "OBJECT_ID")
+        @JoinColumn(name = "MAP_OBJECT_ID")
         private MappingManyObject manyObject;
       }
 
