@@ -49,6 +49,16 @@ public class JpaMain {
 
             System.out.println("reference = " + reference.getClass());
             System.out.println("findMember = " + findMember.getClass());
+
+            MappingMember m1 = new MappingMember();
+            MappingMember m2 = new MappingMember();
+
+            MappingTeam team = new MappingTeam();
+            team.addTeam(m1);
+            team.addTeam(m2);
+
+            em.persist(team);
+
             tx.commit();
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,9 +1,6 @@
 package jpa;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 @Entity
 public class MappingOneObject extends BaseEntity {
@@ -12,6 +9,6 @@ public class MappingOneObject extends BaseEntity {
     private Long id;
     private String name;
 
-    @OneToOne(mappedBy = "oneObject")
+    @OneToOne(mappedBy = "oneObject", fetch = FetchType.LAZY)
     private MappingMember mappingMember;
 }

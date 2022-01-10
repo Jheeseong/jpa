@@ -25,7 +25,7 @@ public class MappingMember extends BaseEntity {
 //    @JoinColumn(insertable = false, updatable = false)
     private MappingTeam team;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ONE_ID")
     private MappingOneObject oneObject;
 

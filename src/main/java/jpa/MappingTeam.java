@@ -11,9 +11,14 @@ public class MappingTeam extends BaseEntity {
     private Long id;
     private String name;
 
-    @OneToMany(mappedBy = "team")
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
 //    @JoinColumn(name = "TEAM_ID") // 연관관계 주인 설정
     List<MappingMember> members = new ArrayList<>();
+
+    public void addTeam(MappingMember member) {
+        members.add(member);
+        member.setTeam(this);
+    }
 
     // 연관관계 편의 메소드
 //    public void addMember(MappingMember mappingMember) {
