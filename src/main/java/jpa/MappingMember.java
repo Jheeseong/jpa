@@ -3,7 +3,9 @@ package jpa;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class MappingMember extends BaseEntity {
@@ -28,6 +30,15 @@ public class MappingMember extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ONE_ID")
     private MappingOneObject oneObject;
+
+    @ElementCollection
+    @CollectionTable(name = "FAVORITE_FOOD", joinColumns =@JoinColumn(name = "MEMBER_ID"))
+    @Column(name = "FOOD_NAME")
+    private Set<String> favoriteFoods = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "ADDRESS", joinColumns = @JoinColumn(name = "MEMBER_ID"))
+    private List<Address> addressHistory = new ArrayList<>();
 
     //ManyToMany 한계
 //    @ManyToMany

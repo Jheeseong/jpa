@@ -22,6 +22,8 @@ public class Member {
             @AttributeOverride(name = "zipcode",column = @Column(name = "WORK_ZIPCODE"))
     })
     private Address workAddress;
+
+
 //    private Integer age;
 //    @Enumerated(EnumType.STRING)
 //    private RoleType roleType;
