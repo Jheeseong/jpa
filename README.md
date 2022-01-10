@@ -1,5 +1,143 @@
 # JPA
 
+# v1.08 1/10
+## 값 타입
+### 값 타입 분류
+- 기본 값 타입 : 자바 기본 타입(int, double), 래퍼 클래스(Integer, Long), String
+- 임베디드 타입
+- 컬렉션 값 타입
+
+### 기본 값 타입
+- 생명주기를 엔티티에 의존
+- 값 타입은 공유X
+- 기본 타입은 항상 값을 복사함
+- Integer, String 같은 경우 공유 가능한 객체지만 변경 X
+
+### 임베디드 타입
+- 새로운 값 타입을 직접 정의
+- JPA는 임베디드 타입
+- 주로 기본 값 타입을 모아서 복합 값 타입이라고도 함
+- 예시
+![image](https://user-images.githubusercontent.com/96407257/148741628-85c70461-6ec2-4280-a0ea-f80e81937620.png)
+- @Embeddable : 값 타입을 정의하는 곳에 표시
+- @Embedded : 값 타입을 사용하는 곳에 표시
+- 기본 생성자 필수
+
+      @Embeddable
+      public class Address {
+          private String city;
+          private String street;
+          private String  zipcode;
+       ....
+       }
+       
+       @Embeddable
+       public class Period {
+          private LocalDateTime startDate;
+          private LocalDateTime endDate;
+       ....
+       }
+       
+       @Entity
+       public class Member {
+
+       ....
+          @Embedded
+          private Address homeAddress;
+          @Embedded
+          private Period workPeriod;
+       ....
+       }
+### 임베디드 타입의 장점
+- 재사용, 높은 응집도
+- 값 타입만 사용하는 의미 있는 메소드 생성 가능
+- 임베디드 타입을 포함한 모든 값 타입은 값타입을 소유한 엔티티에 생명주기를 의존
+- 임베디드 타입을 사용하기 전 후에 매핑하는 테이블은 같음
+- 객테와 테이블을 세밀하게 매핑 가능
+
+### @AttributeOverride 속성
+- 한 엔티티에서 값은 값 타입 사용 시 컬럼이 중복
+- @AttributeOverrides, @AttributeOverride를 사용하여 컬러 명 속성 재정의
+      @Entity
+       public class Member {
+
+       ....
+          @Embedded
+          private Address homeAddress;
+          @Embedded
+          private Period workPeriod;
+          @Embedded
+          @AttributeOverrides({
+                  @AttributeOverride(name = "city",column = @Column(name = "WORK_CITY")),
+                  @AttributeOverride(name = "street",column = @Column(name = "WORK_STREET")),
+                  @AttributeOverride(name = "zipcode",column = @Column(name = "WORK_ZIPCODE"))
+          })
+          private Address workAddress;
+       ....
+       }
+       
+### 값 타입, 객체 타입
+- 임베디드 타입 같은 값 타입을 여러 엔티티에서 공유 시 부작용 발생(값 변경 시 참조한 값들을 다 변경)
+
+![image](https://user-images.githubusercontent.com/96407257/148766584-450c3126-2f4c-4140-ac12-299302b170a6.png)
+- 값 타입의 실제 인스턴스인 값을 공유하는 것은 위험 -> 인스턴스 값을 복사해서 사용
+- 그러나 임베디드 타입 같은 값은 객체 타입으로 참조 값을 직접 대입하는 것을 막지 못함
+- 객체의 공유 참조는 피할 수 없음
+![image](https://user-images.githubusercontent.com/96407257/148766950-31c2bf5e-ff1a-4ad6-9739-590ddf2dc70f.png)
+
+### 불변 객체
+- 객체 타입의 공유 참조를 원천 차단하기 위해 생성 이후 값을 변경할 수 없는 객체로 설계
+- 생성자로만 값을 설정하고 수정자(setter)를 만들지 않으면 됨
+
+### 값 타입 비교
+- 동일성(identity) 비교 : 인스턴스의 참고 값을 비교(== 사용)
+- 동등성(equivalence) 비교 : 인스턴스의 값을 비교,(equals() 사용)
+- 값 타입은 a.equals(b)를 사용하여 동등성 비교를 해야함
+
+### 값 타입 컬렉션
+- 값 타입을 하나 이상 저장할 떄 사용
+- @ElementCollection, @CollectionTable 사용
+- 데이터베이스는 컬렉션 같은 테이블에 저장X
+- 컬렉션 저장을 위한 별도의 테이블 필요
+
+![image](https://user-images.githubusercontent.com/96407257/148778346-ff770a55-ea2d-40a8-9781-a5cfed523a1f.png)
+
+
+      @ElementCollection
+      @CollectionTable(name = "FAVORITE_FOOD", joinColumns =@JoinColumn(name = "MEMBER_ID"))
+      @Column(name = "FOOD_NAME")
+      private Set<String> favoriteFoods = new HashSet<>();
+    
+      @ElementCollection
+      @CollectionTable(name = "ADDRESS", joinColumns = @JoinColumn(name = "MEMBER_ID"))
+      private List<Address> addressHistory = new ArrayList<>();
+      
+- 값 타입 컬렉션도 지연 로딩 전략을 사용
+- 값 타입 컬렉션은 영속성 전이(Cascade)를 필수로 가짐
+
+#### 값 타입 컬렉션 제약사항
+- 값 타입은 엔티티와 다르게 식별자 개념X
+- 값 변경 시 추적이 힘듦
+- 값 타입 컬렉션에 변경 사항 발생 시 주인 엔티티와 연관된 모든 데이터를 삭제 후 현재 값 모두를 다시 저장
+- 값 타입 컬렉션을 매핑하는 테이블은 모든 컬럼을 묶어서 기본 키로 구성(null 입력X, 중복 저장X)
+
+#### 값 타입 컬렉션 대안
+-  상황에 따라 값 타입 컬렉션 대신 일대다 관계를 고려
+-  일대다 관계를 위한 엔티티를 만들고 여기에 값 타입을 사용
+-  영속성 전이(Cascade)를 사용하여 값 타입 컬렉션 처럼 사용
+
+## 엔티티 타입 vs 값 타입
+### 엔티티 타입
+- 식별자O
+- 생명 주기 관리
+- 공유
+### 값 타입
+- 식별자X
+- 생명 주기를 엔티티에 의존
+- 공유하지 않는 것이 안전(복사해서 사용)
+- 불변 객체로 만드는 것이 안전
+
+
 # v1.07 1/10
 
 ## 즉시 로딩과 지연 로딩
