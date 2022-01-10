@@ -1,5 +1,65 @@
 # JPA
 
+# v1.07 1/10
+
+## 즉시 로딩과 지연 로딩
+### 프록시를 이용한 지연 로딩(LAZY)
+![image](https://user-images.githubusercontent.com/96407257/148730642-2c4f6772-3ec8-424d-90d8-7778c795ce7e.png)
+- 지연 로딩 이전에는 Member 호출 시 Team도 함께 쿼리가 날라감.
+- 지연 로딩 후 Team은 프록시를 이용하여 지연시키고 실제 Team 호출 시 초기화.
+- 지연 로딩으로 인해 Member만 쿼리 발생.
+
+    @Entity
+    public class MappingMember extends BaseEntity {
+    ....
+    @ManyToOne(fetch = FetchType.LAZY) //지연 로딩
+    @JoinColumn(name = "TEAM_ID")
+    private MappingTeam team;
+    ....
+    }
+
+### 프록시와 즉시로딩 주의
+- 가급적 지연 로딩 사용(특히 실무에서)
+- 즉시 로딩은 JPQL에서 N+1 문제 발생
+- @ManyToOne, @OneToOne은 기본이 즉시 로딩 -> LAZY로 설정
+
+## 영속성 전이 : CASCADE
+### CASCADE
+- 특정 엔티티를 역속 상태로 만들 떄 연관된 엔티티도 함께 영속 상태로 만듦
+- 영속성 전이는 연관관계 매핑과 관련 X
+- 엔티티 영속화할 때 연관 엔티티도 함께 영속화하는 편리함을 제공할 뿐
+![image](https://user-images.githubusercontent.com/96407257/148731921-9cfdb0ca-ef1c-4d9c-9fb2-9fdb399591c5.png)
+
+      public class MappingTeam extends BaseEntity {
+      ....
+      @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
+      List<MappingMember> members = new ArrayList<>();
+
+      public void addTeam(MappingMember member) {
+          members.add(member);
+          member.setTeam(this);
+      ....
+      }
+      
+      public static void main(String[] args) {
+      ....
+          MappingMember m1 = new MappingMember();
+          MappingMember m2 = new MappingMember();
+
+          MappingTeam team = new MappingTeam();
+          team.addTeam(m1);
+          team.addTeam(m2);
+
+          em.persist(team);
+      ....
+      }
+
+### CASCADE의 종류
+- ALL : 모두 적용
+- PERSIST : 영속
+- REMOVE : 삭제
+
+
 # v1.06 1/9
 
 ## 프록시
