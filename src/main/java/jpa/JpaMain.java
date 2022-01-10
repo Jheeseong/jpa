@@ -36,9 +36,21 @@ public class JpaMain {
 //            for (Member member1 : result) {
 //                System.out.println("member1.getName() = " + member1.getName());
 //            }
+            //프록시 - find,Reference 비교
+            Member member1 = new Member();
+            member1.setUsername("member1");
+            em.persist(member1);
 
+            em.flush();
+            em.clear();
+
+            Member reference = em.getReference(Member.class, member1.getId());
+            Member findMember = em.find(Member.class, member1.getId());
+
+            System.out.println("reference = " + reference.getClass());
+            System.out.println("findMember = " + findMember.getClass());
             tx.commit();
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             tx.rollback();
         } finally {

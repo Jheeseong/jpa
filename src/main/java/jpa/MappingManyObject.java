@@ -8,6 +8,7 @@ import java.util.List;
 public class MappingManyObject extends BaseEntity{
 
     @Id @GeneratedValue
+    @Column(name = "MAP_OBJECT_ID")
     private Long id;
     private String name;
 
@@ -16,7 +17,7 @@ public class MappingManyObject extends BaseEntity{
 //    private List<MappingMember> members = new ArrayList<>();
 
     // ManyToMany 한계 극복
-    @OneToMany(mappedBy = "manyObject")
-    private List<MemberObjects> memberObjects = new ArrayList<>();
+    @OneToMany(mappedBy = "manyObjects")
+    private List<MemberObjects> manyObjects = new ArrayList<>();
 
 }

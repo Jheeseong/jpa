@@ -5,7 +5,7 @@ import javax.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("Two")
-public class InheritanceTableTwo {
+public class InheritanceTableTwo extends InheritanceMain {
 
     private String twoName;
     private String twoOther;

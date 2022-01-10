@@ -1,20 +1,18 @@
 package jpa;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
+@Entity
 public class MemberObjects {
 
     @Id @GeneratedValue
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "MEMBER_ID")
+    @JoinColumn(name = "MAP_MEMBER_ID")
     private MappingMember member;
 
     @ManyToOne
-    @JoinColumn(name = "OBJECT_ID")
-    private MappingManyObject manyObject;
+    @JoinColumn(name = "MAP_OBJECT_ID")
+    private MappingManyObject manyObjects;
 }
