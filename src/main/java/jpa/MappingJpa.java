@@ -27,22 +27,37 @@ public class MappingJpa {
             mappingmember.changeTeam(mappingTeam);
             em.persist(mappingmember);
 
-            em.flush();
-            em.clear();
+            List<MappingMember> resultList = em.createQuery("select m from MappingMember m where m.name like '%member%'"
+                            ,MappingMember.class)
+                    .getResultList();
+            for (MappingMember member : resultList) {
+                System.out.println("member = " + member.getName());
+            }
 
-            MappingMember findMember = em.find(MappingMember.class, mappingmember.getId());
+            Member member = new Member();
+            member.setUsername("member1");
+            member.setAge(10);
+            em.persist(member);
+            List<MemberDTO> resultList1 = em.createQuery("select new jpa.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+                    .setFirstResult(0)
+                    .setMaxResults(100)
+                    .getResultList();
+
+
+
+//            MappingMember findMember = em.find(MappingMember.class, mappingmember.getId());
 //            //식별자로 다시 조회.. 객체지향적이지 않음
 //            Long findTeamId = findMember.getTeamId();
 //            MappingTeam findTeam = em.find(MappingTeam.class, findTeamId);
-            // 단방향 매핑을 통한 member -> team 조회
-            MappingTeam findTeam = findMember.getTeam();
-            System.out.println("findTeam = " + findTeam.getName());
-            // 양방향 매핑을 통한 team -> member 조회
-            List<MappingMember> members = findMember.getTeam().getMembers();
-
-            for (MappingMember member : members) {
-                System.out.println("member.getName() = " + member.getName());
-            }
+//            // 단방향 매핑을 통한 member -> team 조회
+//            MappingTeam findTeam = findMember.getTeam();
+//            System.out.println("findTeam = " + findTeam.getName());
+//            // 양방향 매핑을 통한 team -> member 조회
+//            List<MappingMember> members = findMember.getTeam().getMembers();
+//
+//            for (MappingMember member : members) {
+//                System.out.println("member.getName() = " + member.getName());
+//            }
 
             tx.commit();
 

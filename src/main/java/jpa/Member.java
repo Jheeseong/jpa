@@ -11,6 +11,7 @@ public class Member {
     private Long id;
     @Column(name = "name")
     private String username;
+    private int age;
     @Embedded
     private Address homeAddress;
     @Embedded
@@ -67,5 +68,13 @@ public class Member {
 
     public void setWorkPeriod(Period workPeriod) {
         this.workPeriod = workPeriod;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
     }
 }
