@@ -114,7 +114,47 @@
                     .setFirstResult(0)
                     .setMaxResults(100)
                     .getResultList();
-                    
+
+## 조인
+- 내부 조인 : A테이블과 B테이블의 교집합, select m from Member m [INNER] join m.team t
+- 외부 조인 : A테이블 기준 B테이블의 합집합, select m from Member m left[OUTER] join m.team t
+- 세타 조인 : 조인 조건을 적용한 조인, select count from Member m team t where m.username = t.name
+
+#### 조인 ON 절
+- 조인 대상 필터링
+ 
+      String query = "select m from MappingMember m left join m.team t on t.name='teamA'";
+      List<MappingMember> resultList2 = em.createQuery(query, MappingMember.class)
+              .getResultList();
+      
+- 연관관계 없는 엔티티 외부 조인  
+(MappingMember와 MappingTeam이 연관관계가 아니라는 가정)
+      
+      String query1 = "select m from MappingMember m left join MappingTeam t on m.name = t.name";
+      List<MappingMember> resultList3 = em.createQuery(query1, MappingMember.class)
+              .getResultList();
+
+### 서브 쿼리
+- 쿼리 내부에 또 다른 쿼리를 만드는 방법
+- [NOT] EXISTS (subquery) : 서브쿼리에 결과가 존재하면 참
+
+      //팀A 소속인 회원
+      select m from Member m where exists (select t from m.team t where t.name ='teamA')
+      
+- {ALL|ANY|SOME| (subquery) : ALL(모두 만족하면 참), ANY,SOME(조건을 하나라도 만족하면 참)
+
+      //전체 상품 각각의 재고보다 주문량이 많은 주문들
+      select o from Order o where o.orderAmount > ALL(select p.stockAount from product p)
+
+- [NOT] IN (subquery) : 서브쿼리의 결과 중 하나라도 같은 것이 있으면 참
+
+      //어떤 팀이든 팀에 소속된 회원
+      select m from Member m where m.team = ANY(select t from Team t)
+      
+#### 서브 쿼리 한계
+- JPA는 where, having 절에서만 서브 쿼리 사용 가능
+- select 절도 가능(하이버네이트에서 지원)
+- from 절의 서브 쿼리는 불가능 -> 조인으로 풀 수 있으면 풀어서 해결
 # v1.08 1/10
 ## 값 타입
 ### 값 타입 분류
