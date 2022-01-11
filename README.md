@@ -1,5 +1,120 @@
 # JPA
 
+# v1.09 1/11
+## 객체지향 쿼리(JPQL)
+- JPA는 JPQL, JPA Criteria, QueryDSL, 네이티브 SQL, JDBC API 직접 사용, MyBatis, SpringJdbcTemplate 를 지원
+### JPQL
+- JPA를 사용하면 엔티티 객체를 중심으로 개발
+- 검색 할 때도 테이블이 아닌 엔티티 객체를 대삼으로 검색
+- 모든 DB 데이터를 객체로 변환해서 검색하는 것은 불가능
+- 애플리케이션이 필요한 데이터만 불러오려면 결국 검색 조건이 포함된 SQL이 필요
+- JPA는 SQL을 추상화한 JPQL 이라는 객체 지향 쿼리 언어를 제공
+- SQL 문법과 유사, SELECT, FROM, WHERE, GROUP BY, HAVING, JOIN 지원
+
+      List<MappingMember> resultList = 
+      em.createQuery("select m from MappingMember m where m.name like '%member%'"
+                            ,MappingMember.class)
+                    .getResultList();
+
+### JPA Criteria
+- 문자가 아닌 자바코드로 JPQL 작성
+- JPA 공식 기능
+- 단점 : 복잡, 실용성이 없음
+
+### QueryDSL
+- 문자가 아닌 자바코드로 JPQL 작성
+- 컴파일 시점에 문법 오류 확인 가능
+- 동적 쿼리 작성 편리
+- 실무 사용 권장
+      
+      JPAFactoryQuery query = new JPAQueryFactory(em);
+      MappingMember m = MappingMember.member; 
+      List<MappingMember> list = 
+      query.selectFrom(m)
+      .where(m.name.gt(18)) 
+      .orderBy(m.name.desc())
+      .fetch();
+      
+ ### JPQL 기본 문법 및 기능
+ ![image](https://user-images.githubusercontent.com/96407257/148914514-b7f4f7cb-4d7b-4b50-92d5-dcc4e7af986f.png)
+ - 엔티티와 속성은 대소문자 구분 O
+ - JPQL 키워드는 대소문자 구분 X(SELECT,FROM,where)
+ - 엔티티 이름 사용, 테이블 이름 사용 X
+ - 별칭은 필수(as는 생략 가능)
+
+### TypeQuery, Query
+- TypeQuery : 반환 타입이 명확할 떄 사용  
+      
+      TypedQuery<Member> query = 
+          em.createQuery("SELECT m FROM Member m", Member.class);  
+
+- Query : 반환 타입이 명확하지 않을 때 사용  
+      
+      Query query = 
+          em.createQuery("SELECT m.username, m.age from Member m");  
+
+### 결과 조회 API
+- query.getResultList(): 결과가 하나 이상일 때, 리스트 반환(결과가 없으면 빈 리스트 반환)
+- query.getSingleResult() : 결과가 정확히 하나, 단일 객체 반환(결과가 없으면 Exeption)
+
+### 파라미터 바인딩
+- 이름기준
+
+      SELECT m FROM Member m where m.username=:username 
+      query.setParameter("username", usernameParam);
+
+- 위치 기준
+
+      SELECT m FROM Member m where m.username=?1 
+      query.setParameter(1, usernameParam);
+      
+## 프로젝션
+- SELECT 절에 조회할 대상을 지정하는 것
+- select m from Member m -> 엔티티 프로젝션
+- select m.team from Member m -> 엔티티 프로젝션(or select t from Member m join m.team t)
+- select m.address from Member m -> 임베디드 타입 프로젝션
+- select m.name, m.age from Member m -> 스칼라 타입 프로젝션
+
+### 프로젝션 - 여러 값 조회
+- select m.name, m.age from Member m
+- Query 타입으로 조회
+- Object[] 타입으로 조회
+- new 명령어로 조회
+      
+      Member member = new Member();
+      member.setUsername("member1");
+      member.setAge(10);
+      em.persist(member);
+      
+      List<MemberDTO> resultList1 = em.createQuery("select new jpa.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+                    .getResultList();
+                    
+      
+      public class MemberDTO {
+
+      private String username;
+      private int age;
+
+      public MemberDTO(String name, int age) {
+          this.username = name;
+          this.age = age;
+          }
+      ....
+      }
+      
+- 단순 값을 DTO로 조회
+- 패키지 명을 포함한 전체 클래스 명 입력
+- 순서와 타입이 일치하는 생성자 필요
+
+## 페이징
+- setFirstResult(int startPosition) : 조회 시작 위치(0부터 시작)
+- setMaxResults(int maxResult) : 조회할 데이터 수
+
+      List<MemberDTO> resultList1 = em.createQuery("select new jpa.MemberDTO(m.username, m.age) from Member m", MemberDTO.class)
+                    .setFirstResult(0)
+                    .setMaxResults(100)
+                    .getResultList();
+                    
 # v1.08 1/10
 ## 값 타입
 ### 값 타입 분류
