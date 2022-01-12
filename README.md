@@ -155,6 +155,53 @@
 - JPA는 where, having 절에서만 서브 쿼리 사용 가능
 - select 절도 가능(하이버네이트에서 지원)
 - from 절의 서브 쿼리는 불가능 -> 조인으로 풀 수 있으면 풀어서 해결
+
+### JPQL 타입 표현
+- 문자 : 'HELLO', 'MEMBER"s"
+- 숫자 : 1L(Long), 1D(Double), 1F(Float)
+- Boolean : TRUE, FALSE, "select m.name, 'HELLO', true from Member m"
+- Enum : 패키지명 포함, "select m from Member m where m.type = jpa.MemberType.USER"
+- 엔티티 타입 : TYPE(m) = Member(상속 관계에서 사용), select i from InheritanceMain i where type(i) = InheritanceTableOne"
+- SQL과 문법이 같은 식
+- EXISTS, IN, AND, OR, NOT, 비교식(=,<,> 등), BETWEEN, LIKE, IS NULL 등 사용 가능
+
+### 조건식 - CASE
+- 기본 CASE 식
+
+      select
+      case when m.age <= 10 then '학생요금'
+      when m.age >= 60 then '경로요금'
+      else '일반요금'
+      end
+      from Member m
+
+- 단순 CASE 식
+
+      select
+      case t.name 
+      when '팀A' then '인센티브110%'
+      when '팀B' then '인센티브120%'
+      else '인센티브105%'
+      end
+      from Team t
+      
+- COALESCE : 하나씩 조회해서 null이 아니면 반환
+      
+      select coalesce(m.username,'이름 없는 회원') from Member m
+      
+- NULLIF : 두 값이 같으면 null 반환, 다르면 첫번쨰 값 반환
+
+      select NULLIF(m.username, '관리자') from Member m
+      
+### JPQL 기본 함수
+- JPQL 표준 함수
+- CONCAT, SUBSTRING, TRIM, LOWER, UPPER, LENGTH, LOCATE, ABS, SQRT, MOD, SIZE, INDEX(JPA 용도)
+- 적용되지 않을 경우 사용자 정의 함수 호출  
+하이버네이트 사용 전 방언에 추가  
+사용하는 DB 방언 상속 받은 후 사용자 정의 함수를 동록  
+
+      select function('group_concat', i.name) from Item i
+
 # v1.08 1/10
 ## 값 타입
 ### 값 타입 분류
