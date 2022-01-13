@@ -49,5 +49,13 @@ public class MappingTeam extends BaseEntity {
     public void setMembers(List<MappingMember> members) {
         this.members = members;
     }
+
+    @Override
+    public String toString() {
+        return "MappingTeam{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
 

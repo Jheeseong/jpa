@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
+//@NamedQuery(
+//        name = "Member.findByName",
+//        query = "select m from MappingMember m where m.name = :name"
+//)
 public class MappingMember extends BaseEntity {
     @Id
     @GeneratedValue
@@ -77,5 +81,14 @@ public class MappingMember extends BaseEntity {
     public void changeTeam(MappingTeam team) {
         this.team = team;
         team.getMembers().add(this);
+    }
+
+    @Override
+    public String toString() {
+        return "MappingMember{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", team=" + team +
+                '}';
     }
 }
