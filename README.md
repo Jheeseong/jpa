@@ -1,4 +1,151 @@
 # JPA
+# v1.10 1/12
+## JPQL - 경로표현식
+- .을 찍어 객체 그래프를 탐색
+![image](https://user-images.githubusercontent.com/96407257/149266353-5e196ed3-cded-4589-b197-6e8506e82c92.png)
+- 상태 필드(state field) : 단순히 값을 저장하기 위한 필드, 경로 탐색의 끝, 탐색 X
+- 연관 필드(association field) : 연관관계를 위한 필드
+  - 단일 값 연관 필드 : @ManyToOne, @OneToOne, 대상이 엔티티, 묵시적 내부조인(inner join) 발생, 탐색 O
+  - 컬렉션 값 연관 필드 : @OneToMany, @ManyToMany, 대상이 컬렉션, From절에서 명시적 조인 발생, 탐색 X
+
+### 명시적 조인 묵시적 조인
+- 명시적 조인 : join 키워드 직접 사용, select m from Member m join m.team t
+- 묵시적 조인 : 경로 표현식에 의해 묵시적으로 SQL 조인 발생(내부 조인만 가능), select m.team from Member m
+
+### 묵시적 조인 주의사항
+- 항상 내부 조인
+- 컬렉션은 경로 탐색의 끝, 명시적 조인을 사용
+- select, where 절에서 경로탐색을 사용하지만 묵시적 조인으로 인해 from절에 영향 O
+- 가급적 묵시적 조인 대신 명시적 조인 사용(실무에서 문제점 발생)
+- 묵시적 조인은 문제 시 상황 파악이 어려움
+
+## 조인 패치(join fetch)
+- SQL 조인 종류 X
+- JPQL 성능 최적화를 위해 제공하는 기능
+- 연관 엔티티나 컬렉션을 한 번에 함께 조회
+
+### 엔티티 조인 패치
+- 회원을 조회하면서 연관된 팀도 함께 조회
+- SQL 보면 회원 뿐만 아니라 팀도 함께 select
+
+      List<MappingMember> resultList5 = em.createQuery("select m from MappingMember m join fetch m.team", MappingMember.class)
+                    .getResultList();
+            for (MappingMember mappingMember : resultList5) {
+                System.out.println("mappingMember = " + mappingMember);
+            }
+            
+![image](https://user-images.githubusercontent.com/96407257/149268309-de7ae210-5204-4059-a197-484b9567dacf.png)
+
+### 컬렉션 조인 패치
+- 일대다 관계, 컬렉션 조인 패치
+- 컬렉션을 조인 패치할 경우 team을 기준으로 list를 모아서 데이터가 부풀러지는 문제점 발생
+
+       List<MappingTeam> resultList6 = em.createQuery("select t from MappingTeam t join fetch t.members", MappingTeam.class)
+                    .getResultList();
+       for (MappingTeam team : resultList6) {
+                System.out.println("team = " + team.getName() + "|members = " + team.getMembers().size());
+            }
+            
+![image](https://user-images.githubusercontent.com/96407257/149268362-88ca6dca-e994-41e7-a84f-0a0787322ba3.png)
+
+### 조인 패치와 DISTINCT
+- SQL의 DISTINCT는 중복된 결과를 제거하는 명령
+- SQL에 DISTINCT를 추가하는 방법
+- 애플리케이션에서 엔티티 중복 제거 방법
+      
+      select distinct t from MappingTeam t join fetch t.members
+      
+- SQL에 DISTINCT를 추가하지만 데이터가 달라 SQL 결과에서 중복제거 실패
+- DISTINCT가 추가로 애플리케이션에서 중복 제거 시도
+- 같은 식별자를 가진 엔티티를 제거  
+
+![image](https://user-images.githubusercontent.com/96407257/149269386-0855bc85-828a-4498-a01a-4d25d8534645.png)
+
+### 조인 패치과 일반 조인의 차이
+- 일반 조인 실행 시 연관된 엔티티를 함께 조회하지 않음, 지정한 엔티티만 조회
+- 조인 패치을 사용할 때만 연관된 엔티티를 함께 조회(즉시 로딩)
+- 조인 패치는 객체 그래프를 SQL 한번에 조회하는 개념
+- 조인 패치는 대상에 별칭 X  
+(조인 패치 개념 자체가 연관된 엔티티 모든 DB를 가져오는 것인데 일부분만 가져 올 경우 데이터 정합성이 맞지 않음)
+- 둘 이상의 컬랙션은 조인 패치 불가능(데이터가 부풀러져 데이터 정합성이 맞지 않을 가능성 높음)
+- 컬랙션을 조인 패치 시 페이징 API를 사용 못함(데이터가 부풀러져 원하는 데이터 값이 안나올 가능성 높음)
+-> persistence.xml에서 property name="hibernate.default_batch_fetch_size" value="100" 추가
+### 조인 패치의 특징과 한계
+- 연관된 엔티티들을 한 번으로 조회 - 성능 최적화
+- 엔티티에 직접 적용하는 글로벌 로딩 전략(fetchType.LAZY)보다 우선 시
+- 실무에서 글로벌 로딩 전략은 모두 지연 로딩
+- 최적화가 필요한 곳은 조인 패치 적용
+- 조인 패치는 객체 그래프를 유지할 떄 사용하면 효과적
+- 여러 테이블을 조인해서 엔티티가 가진 모양과 다른 결과를 내야하면 일반 조인을 사용하고 필요한 데이터들만 조회하여 DTO로 반환하는 것이 효과적
+
+## JPQL - TYPE
+- 조회 대상을 특정 자식으로 한정  
+![image](https://user-images.githubusercontent.com/96407257/149271630-d098a1a7-37e7-4518-ab81-b279e993a5e6.png)
+
+## JPQL - TREAT
+- 자바의 타입 캐스팅과 유사
+- 상속 구조에서 부모 타입을 특정 자식 타입으로 다룰 떄 사용
+- from, where, select 사용  
+![image](https://user-images.githubusercontent.com/96407257/149271752-3eb39071-3e13-4a50-8e1c-2b223a92f899.png)
+
+## JPQL - 엔티티 직접 사용
+- 기본 키 값
+
+      //엔티티를 파라미터로 전달//
+      String jpql = “select m from Member m where m = :member”; 
+      List resultList = em.createQuery(jpql) 
+                          .setParameter("member", member) 
+                          .getResultList(); 
+                          
+      //식별자를 직접 전달//
+      String jpql = “select m from Member m where m.id = :memberId”; 
+      List resultList = em.createQuery(jpql) 
+                          .setParameter("memberId", memberId) 
+                          .getResultList(); 
+
+- 외래 키 값
+
+      String qlString = “select m from Member m where m.team.id = :teamId”; 
+      List resultList = em.createQuery(qlString) 
+                          .setParameter("teamId", teamId) 
+                          .getResultList(); 
+
+## JPQL - Named 쿼리
+- 미리 정의해서 이름 부여 후 사용하는 JPQL
+- 정적 쿼리
+- 애플리케이션 로딩 시점에 초기화 후 재사용
+- 애플리케이션 로딩 시점에 쿼리를 컴파일 에러로 체크 가능
+
+      @Entity
+      @NamedQuery(
+               name = "Member.findByName",
+               query = "select m from MappingMember m where m.name = :name"
+        )
+      public class MappingMember extends BaseEntity {
+      ....
+      }
+  
+      em.createNamedQuery("Member.findByName", MappingMember.class)
+                    .setParameter("name", "회원1")
+                    .getResultList();
+                    
+## JPQL - 벌크 연산
+- 쿼리 한 번으로 여러 테이블 오우 변경(엔티티)
+- executeupdate()의 결과는 영향받은 엔티티 수 반환
+- update, delete 지원
+
+      //재고가 10개 미만인 모든 상품의 가격을 10% 상승//
+      String qlString = "update Product p " +
+                        "set p.price = p.price * 1.1 " + 
+                        "where p.stockAmount < :stockAmount"; 
+
+      int resultCount = em.createQuery(qlString) 
+                          .setParameter("stockAmount", 10) 
+                          .executeUpdate(); 
+
+- 벌크 연산은 영속성 컨텍스트를 무시하고 데이터베이스에 직접 쿼리
+  - 벌크 연산 먼저 실행
+  - 벌크 연산 수행 후 영속성 컨텍스트 초기화
 
 # v1.09 1/11
 ## 객체지향 쿼리(JPQL)
@@ -114,7 +261,94 @@
                     .setFirstResult(0)
                     .setMaxResults(100)
                     .getResultList();
-                    
+
+## 조인
+- 내부 조인 : A테이블과 B테이블의 교집합, select m from Member m [INNER] join m.team t
+- 외부 조인 : A테이블 기준 B테이블의 합집합, select m from Member m left[OUTER] join m.team t
+- 세타 조인 : 조인 조건을 적용한 조인, select count from Member m team t where m.username = t.name
+
+#### 조인 ON 절
+- 조인 대상 필터링
+ 
+      String query = "select m from MappingMember m left join m.team t on t.name='teamA'";
+      List<MappingMember> resultList2 = em.createQuery(query, MappingMember.class)
+              .getResultList();
+      
+- 연관관계 없는 엔티티 외부 조인  
+(MappingMember와 MappingTeam이 연관관계가 아니라는 가정)
+      
+      String query1 = "select m from MappingMember m left join MappingTeam t on m.name = t.name";
+      List<MappingMember> resultList3 = em.createQuery(query1, MappingMember.class)
+              .getResultList();
+
+### 서브 쿼리
+- 쿼리 내부에 또 다른 쿼리를 만드는 방법
+- [NOT] EXISTS (subquery) : 서브쿼리에 결과가 존재하면 참
+
+      //팀A 소속인 회원
+      select m from Member m where exists (select t from m.team t where t.name ='teamA')
+      
+- {ALL|ANY|SOME| (subquery) : ALL(모두 만족하면 참), ANY,SOME(조건을 하나라도 만족하면 참)
+
+      //전체 상품 각각의 재고보다 주문량이 많은 주문들
+      select o from Order o where o.orderAmount > ALL(select p.stockAount from product p)
+
+- [NOT] IN (subquery) : 서브쿼리의 결과 중 하나라도 같은 것이 있으면 참
+
+      //어떤 팀이든 팀에 소속된 회원
+      select m from Member m where m.team = ANY(select t from Team t)
+      
+#### 서브 쿼리 한계
+- JPA는 where, having 절에서만 서브 쿼리 사용 가능
+- select 절도 가능(하이버네이트에서 지원)
+- from 절의 서브 쿼리는 불가능 -> 조인으로 풀 수 있으면 풀어서 해결
+
+### JPQL 타입 표현
+- 문자 : 'HELLO', 'MEMBER"s"
+- 숫자 : 1L(Long), 1D(Double), 1F(Float)
+- Boolean : TRUE, FALSE, "select m.name, 'HELLO', true from Member m"
+- Enum : 패키지명 포함, "select m from Member m where m.type = jpa.MemberType.USER"
+- 엔티티 타입 : TYPE(m) = Member(상속 관계에서 사용), select i from InheritanceMain i where type(i) = InheritanceTableOne"
+- SQL과 문법이 같은 식
+- EXISTS, IN, AND, OR, NOT, 비교식(=,<,> 등), BETWEEN, LIKE, IS NULL 등 사용 가능
+
+### 조건식 - CASE
+- 기본 CASE 식
+
+      select
+      case when m.age <= 10 then '학생요금'
+      when m.age >= 60 then '경로요금'
+      else '일반요금'
+      end
+      from Member m
+
+- 단순 CASE 식
+
+      select
+      case t.name 
+      when '팀A' then '인센티브110%'
+      when '팀B' then '인센티브120%'
+      else '인센티브105%'
+      end
+      from Team t
+      
+- COALESCE : 하나씩 조회해서 null이 아니면 반환
+      
+      select coalesce(m.username,'이름 없는 회원') from Member m
+      
+- NULLIF : 두 값이 같으면 null 반환, 다르면 첫번쨰 값 반환
+
+      select NULLIF(m.username, '관리자') from Member m
+      
+### JPQL 기본 함수
+- JPQL 표준 함수
+- CONCAT, SUBSTRING, TRIM, LOWER, UPPER, LENGTH, LOCATE, ABS, SQRT, MOD, SIZE, INDEX(JPA 용도)
+- 적용되지 않을 경우 사용자 정의 함수 호출  
+하이버네이트 사용 전 방언에 추가  
+사용하는 DB 방언 상속 받은 후 사용자 정의 함수를 동록  
+
+      select function('group_concat', i.name) from Item i
+
 # v1.08 1/10
 ## 값 타입
 ### 값 타입 분류
